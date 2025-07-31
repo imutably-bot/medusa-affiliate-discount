@@ -1,7 +1,8 @@
 const express = require("express")
 const { GracefulShutdownServer } = require("medusa-core-utils")
 
-const loaders = require("@medusajs/medusa/dist/loaders/index").default
+// Import from @medusajs/framework instead of @medusajs/medusa for Medusa v2
+const { createMedusaContainer } = require("@medusajs/framework")
 
 ;(async() => {
   async function start() {
@@ -9,10 +10,12 @@ const loaders = require("@medusajs/medusa/dist/loaders/index").default
     const directory = process.cwd()
 
     try {
-      const { container } = await loaders({
+      // Use createMedusaContainer from @medusajs/framework for Medusa v2
+      const { container } = await createMedusaContainer({
         directory,
         expressApp: app
       })
+      
       const configModule = container.resolve("configModule")
       const port = process.env.PORT ?? configModule.projectConfig.port ?? 9000
 
