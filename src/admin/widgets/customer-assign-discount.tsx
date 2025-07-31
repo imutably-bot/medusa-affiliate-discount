@@ -11,7 +11,7 @@
  */
 
 import type { WidgetConfig, CustomerDetailsWidgetProps } from "@medusajs/admin"
-import { Container, useToggleState, Table, Button, Heading, DropdownMenu, IconButton, clx, usePrompt, Select, FocusModal, Input, toast, Toaster} from "@medusajs/ui"
+import { Container, useToggleState, Table, Button, DropdownMenu, IconButton, clx, usePrompt, Select, FocusModal, Input, Toast, Toaster} from "@medusajs/ui"
 import { useForm, Controller, Control, UseFormRegister } from "react-hook-form"
 
 import {
@@ -80,14 +80,14 @@ const AffilateDiscountsTableActions = ({ affiliateDiscountId }: { affiliateDisco
       await mutateAsync(undefined, {
         onSuccess: ({ response }) => {
           if (response.status == 200) {
-            toast.success('Affiliate discount', {
+            Toast.success('Affiliate discount', {
               description: "Your affiliate discount has been deleted",
               duration: 5000
             });
           }
 
           if (response.status != 200) {
-            toast.error('Affiliate discount', {
+            Toast.error('Affiliate discount', {
               description: "Failed to delete affiliate discount",
               duration: 5000
             });
@@ -95,14 +95,14 @@ const AffilateDiscountsTableActions = ({ affiliateDiscountId }: { affiliateDisco
         },
         onError( error ) {
           const realError = getErrorMessage(error);
-          toast.error('Affiliate discount', {
+          Toast.error('Affiliate discount', {
             description: realError,
             duration: 5000
           });
         },
       })
     } catch (e) {
-      toast.error('Affiliate discount', {
+      Toast.error('Affiliate discount', {
         description: "Failed to delete affiliate discount",
         duration: 5000
       });
@@ -241,26 +241,24 @@ const DiscountList = ({control} : { control: Control<NewAffiliateDiscountFormTyp
       defaultValue=""
       render={({ field: { onChange, value } }) => {
         return (
-          <Select
-            size="small"
-              value={value}
-              onValueChange={onChange}
-          >
-            <Select.Trigger>
-              <Select.Value />
-            </Select.Trigger>
-            <Select.Content>
-                {discounts.map((discount) => (
-                  <Select.Item key={discount.id} value={discount.id}>
-                    {discount.code}
-                  </Select.Item>
-                ))}
-              </Select.Content>
-          </Select>
+          <div className="flex items-center gap-x-2">
+            <select
+              className="w-full rounded-rounded border border-gray-200 bg-white px-4 py-2 text-gray-900"
+              value={value || ""}
+              onChange={onChange}
+            >
+              <option value="">Select a discount</option>
+              {discounts.map((discount) => (
+                <option key={discount.id} value={discount.id}>
+                  {discount.code}
+                </option>
+              ))}
+            </select>
+          </div>
         )
       }}
     />
-  )
+  );
 }
 
 const ChooseDiscount = ({control} : { control: Control<NewAffiliateDiscountFormType, any>}) => {
@@ -365,7 +363,7 @@ const CreateAffDiscForm = ({ customerId } : { customerId: string }) => {
 
   const onSubmit = (newDiscount: NewAffiliateDiscountFormType) => {
     if (!newDiscount.commission || !newDiscount.customerId || !newDiscount.discountId || !validateCommission(newDiscount.commission)) {
-      toast.error('Affiliate discount', {
+      Toast.error('Affiliate discount', {
         description: "Values provided in fields are not correct",
         duration: 5000
       });
@@ -379,7 +377,7 @@ const CreateAffDiscForm = ({ customerId } : { customerId: string }) => {
       }, {
       onSuccess: ( { response } ) => {
         if (response.status == 201) {
-          toast.success('Affiliate discount', {
+          Toast.success('Affiliate discount', {
             description: "Your affiliate discount has been published",
             duration: 5000
           });
@@ -387,7 +385,7 @@ const CreateAffDiscForm = ({ customerId } : { customerId: string }) => {
         }
 
         if (response.status != 201) {
-          toast.error('Affiliate discount', {
+          Toast.error('Affiliate discount', {
             description: "Something went wrong. Please check values in fields.",
             duration: 5000
           });
@@ -395,7 +393,7 @@ const CreateAffDiscForm = ({ customerId } : { customerId: string }) => {
       },
       onError( error ) {
         const realError = getErrorMessage(error);
-        toast.error('Affiliate discount', {
+        Toast.error('Affiliate discount', {
           description: realError,
           duration: 5000
         });
@@ -414,7 +412,8 @@ const CreateAffDiscForm = ({ customerId } : { customerId: string }) => {
 
   return (
     <>
-    <FocusModal open={modalState} onOpenChange={onModalStateChange}>
+      {modalState && (
+        <FocusModal>
         <FocusModal.Trigger asChild>
           <Button variant="primary">Create New</Button>
         </FocusModal.Trigger>
@@ -435,9 +434,9 @@ const CreateAffDiscForm = ({ customerId } : { customerId: string }) => {
               <div className="flex h-full flex-col">
                   <div className="border-ui-border-base flex items-center justify-between pb-4 pt-6">
                     <div className="flex items-center gap-x-3">
-                      <Heading>
+                      <h2 className="text-lg font-semibold text-gray-900">
                         {`New affiliate discount`}
-                      </Heading>
+                      </h2>
                     </div>
                 </div>
                 <div className="py-xlarge">
@@ -450,7 +449,8 @@ const CreateAffDiscForm = ({ customerId } : { customerId: string }) => {
             </div>
           </FocusModal.Body>
         </FocusModal.Content>
-    </FocusModal>
+        </FocusModal>
+      )}
     </>
   )
 }
@@ -481,7 +481,7 @@ const CustomAssignDiscountWidget = (props: CustomerDetailsWidgetProps) => {
     <Toaster/>
     <Container>
       <div className="flex items-center justify-between px-8 pt-6 pb-4">
-        <Heading>Affiliate discounts</Heading>
+        <h2 className="text-xl font-semibold text-gray-900">Affiliate discounts</h2>
         <div className="flex items-center gap-x-2">
           <CreateAffDiscForm customerId={props.customer.id}/>
         </div>
@@ -496,4 +496,4 @@ export const config: WidgetConfig = {
   zone: "customer.details.after",
 }
 
-export default CustomAssignDiscountWidget
+export default CustomAssignDiscountWidget;
