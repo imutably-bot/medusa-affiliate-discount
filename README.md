@@ -9,7 +9,7 @@
 </h1>
 
 <h2>
-  Note: This plugin will be migrated to Medusa v2, when v2 will reach production readiness.
+  Note: This plugin has been migrated to Medusa v2.8.5.
 </h2>
 
 Medusa "Affiliate Discount" is a plugin which enables possibility to create a discount which is a part of affiliation program.
@@ -29,24 +29,12 @@ const plugins = [
   // ... other plugins
   {
     resolve: `@rsc-labs/medusa-affiliate-discount`,
-    options: {
-      
-    }
+    options: {}
   }
 ]
 ```
-1. If you are interested also in using simple Admin UI widget, please add `enableUI` option.
-```js
-const plugins = [
-  // ... other plugins
-  {
-    resolve: `@rsc-labs/medusa-affiliate-discount`,
-    options: {
-      enableUI: true
-    }
-  }
-]
-```
+
+**Note for Medusa v2 users:** The admin UI widget is automatically included and will appear on the customer details page. The `enableUI` option is no longer needed in Medusa v2.
 ## How can I use it?
 
 ### enableUI enabled
