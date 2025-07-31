@@ -13,8 +13,9 @@
 import type { 
     MedusaRequest, 
     MedusaResponse,
-  } from "@medusajs/medusa"
-import AffiliateDiscountService from "../../../../services/affiliateDiscount";
+  } from "@medusajs/framework/http"
+import { AFFILIATE_DISCOUNT_MODULE } from "../../../../modules/affiliate-discount";
+import type { AffiliateDiscountService } from "../../../../modules/affiliate-discount/service";
   
 export const DELETE = async (
     req: MedusaRequest,
@@ -22,9 +23,11 @@ export const DELETE = async (
   ) => {
     const affiliateDiscountId = req.params.id;
     if (affiliateDiscountId) {
-      const affiliateDiscountService: AffiliateDiscountService = req.scope.resolve('affiliateDiscountService');
+      const affiliateDiscountModuleService = req.scope.resolve(
+        AFFILIATE_DISCOUNT_MODULE
+      ) as AffiliateDiscountService
       try {
-        await affiliateDiscountService.deleteAffiliateDiscount(affiliateDiscountId);
+        await affiliateDiscountModuleService.deleteAffiliateDiscount(affiliateDiscountId);
         res.status(200).end();
       } catch (e) {
         res.status(400).json({

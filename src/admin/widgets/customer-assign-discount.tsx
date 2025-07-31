@@ -10,21 +10,10 @@
  * limitations under the License.
  */
 
-import type { WidgetConfig, CustomerDetailsWidgetProps } from "@medusajs/admin"
-import { Container, useToggleState, Table, Button, DropdownMenu, IconButton, clx, usePrompt, Select, FocusModal, Input, Toast, Toaster} from "@medusajs/ui"
-import { useForm, Controller, Control, UseFormRegister } from "react-hook-form"
-
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  createColumnHelper
-} from "@tanstack/react-table"
-
-import { useAdminCustomPost, useAdminCustomQuery, useAdminCustomDelete } from "medusa-react"
-import { EllipsisHorizontal, Trash } from "@medusajs/icons"
-import { useAdminDiscounts } from "medusa-react"
-import React from "react"
+import type { WidgetConfig } from "@medusajs/admin-sdk"
+import { Container, Button, Input, toast } from "@medusajs/ui"
+import { useForm } from "react-hook-form"
+import React, { useState, useEffect } from "react"
 
 type AffiliateDiscountResult = {
   id: string,
@@ -35,465 +24,251 @@ type AffiliateDiscountResult = {
   commission: number,
   usageCount: number,
   earnings: number,
-  currencyCode: string
+  currencyCode: string,
+  created_at: string,
+  updated_at: string
 }
 
 type NewAffiliateDiscountFormType = {
   customerId: string,
-  discountId: string
-  commission: number
-}
-
-const getErrorMessage = (error: any) => {
-  console.log(error);
-  let msg = error?.response?.data?.message
-  if (msg[0].message) {
-      msg = msg[0].message
-  }
-  if (!msg) {
-      msg = "Something went wrong..."
-  }
-  return msg
-}
-
-const AffilateDiscountsTableActions = ({ affiliateDiscountId }: { affiliateDiscountId: string }) => {
-
-  const prompt = usePrompt();
-  const { mutateAsync } = useAdminCustomDelete<{}>
-  (
-    `/affiliate-discount/${affiliateDiscountId}`,
-    ["affiliate-discount"],
-  )
-
-  const onDelete = async () => {
-    const response = await prompt({
-      title: "Are you sure?",
-      description:
-        "This will delete affiliate discount. This operation cannot be reverted.",
-    })
-
-    if (!response) {
-      return
-    }
-
-    try {
-      await mutateAsync(undefined, {
-        onSuccess: ({ response }) => {
-          if (response.status == 200) {
-            Toast.success('Affiliate discount', {
-              description: "Your affiliate discount has been deleted",
-              duration: 5000
-            });
-          }
-
-          if (response.status != 200) {
-            Toast.error('Affiliate discount', {
-              description: "Failed to delete affiliate discount",
-              duration: 5000
-            });
-          }
-        },
-        onError( error ) {
-          const realError = getErrorMessage(error);
-          Toast.error('Affiliate discount', {
-            description: realError,
-            duration: 5000
-          });
-        },
-      })
-    } catch (e) {
-      Toast.error('Affiliate discount', {
-        description: "Failed to delete affiliate discount",
-        duration: 5000
-      });
-    }
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenu.Trigger asChild>
-        <IconButton variant="transparent">
-          <EllipsisHorizontal />
-        </IconButton>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content align="end" side="bottom">
-        <DropdownMenu.Item 
-          onClick={onDelete}
-          className={clx(
-            {
-              "text-rose-50": true,
-            },
-            "px-base py-[6px] outline-none flex items-center gap-x-xsmall hover:bg-grey-5 focus:bg-grey-10 transition-colors cursor-pointer",
-            "hover:bg-grey-0"
-          )}
-        >
-          <Trash/>
-          <span>Delete</span>
-        </DropdownMenu.Item>
-      </DropdownMenu.Content>
-    </DropdownMenu>
-  )
-}
-
-const columnHelper = createColumnHelper<AffiliateDiscountResult>()
-
-const columns = [
-columnHelper.accessor("customerEmail", {
-  header: "Customer",
-  cell: (info) => info.getValue(),
-}),
-columnHelper.accessor("discountCode", {
-  header: "Discount code",
-  cell: (info) => info.getValue(),
-}),
-columnHelper.accessor("commission", {
-  header: "Commission",
-  cell: (info) => `${info.getValue()}%`,
-}),
-columnHelper.accessor("usageCount", {
-  header: "Usage count",
-  cell: (info) => (
-    <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-      {info.getValue()}
-    </span>
-  ),
-}),
-columnHelper.display({
-  id: 'earnings',
-  header: "Earnings",
-  cell: props => (
-    <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-      {`${props.row.original.earnings / 100} ${props.row.original.currencyCode}`}
-    </span>
-  ),
-}),
-columnHelper.display({
-  id: 'actions',
-  cell: props => <AffilateDiscountsTableActions affiliateDiscountId={props.row.original.id} />,
-}),
-]
-
-
-const AffilateDiscountsTable = ({affiliateDiscounts} : {affiliateDiscounts: AffiliateDiscountResult[]}) => {
-  const table = useReactTable<AffiliateDiscountResult>({
-    data: affiliateDiscounts || [],
-    columns: columns,
-    getCoreRowModel: getCoreRowModel(),
-  })
-
-  return (
-    <Table>
-      <Table.Header>
-        {table.getHeaderGroups().map((headerGroup) => {
-          return (
-            <Table.Row
-              key={headerGroup.id}
-              className="[&_th]:w-1/5 [&_th:last-of-type]:w-[1%]"
-            >
-              {headerGroup.headers.map((header) => {
-                return (
-                  <Table.HeaderCell key={header.id}>
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </Table.HeaderCell>
-                )
-              })}
-            </Table.Row>
-          )
-        })}
-      </Table.Header>
-      <Table.Body className="border-b-0">
-        {table.getRowModel().rows.map((row) => {
-          return (
-          <Table.Row
-            key={row.id}
-            className="[&_th]:w-1/5 [&_th:last-of-type]:w-[1%]"
-          >
-            {row.getVisibleCells().map((cell) => (
-              <Table.Cell key={cell.id}>
-                {flexRender(
-                  cell.column.columnDef.cell,
-                  cell.getContext()
-                )}
-              </Table.Cell>
-            ))}
-          </Table.Row>
-          )
-        })}
-      </Table.Body>
-    </Table>
-  )
-}
-
-const DiscountList = ({control} : { control: Control<NewAffiliateDiscountFormType, any>}) => {
-
-  const { discounts, isFetching: isFetchingDiscounts } = useAdminDiscounts();
-  if (isFetchingDiscounts) {
-    return <></>
-  }
-
-  return (
-    <Controller
-      name="discountId"
-      control={control}
-      defaultValue=""
-      render={({ field: { onChange, value } }) => {
-        return (
-          <div className="flex items-center gap-x-2">
-            <select
-              className="w-full rounded-rounded border border-gray-200 bg-white px-4 py-2 text-gray-900"
-              value={value || ""}
-              onChange={onChange}
-            >
-              <option value="">Select a discount</option>
-              {discounts.map((discount) => (
-                <option key={discount.id} value={discount.id}>
-                  {discount.code}
-                </option>
-              ))}
-            </select>
-          </div>
-        )
-      }}
-    />
-  );
-}
-
-const ChooseDiscount = ({control} : { control: Control<NewAffiliateDiscountFormType, any>}) => {
-  return (
-    <>
-      <div className="border-grey-20 py-xlarge border-t">
-        <div className="flex items-center justify-between">
-          <div className="gap-y-2xsmall flex flex-col">
-            <div className="gap-x-xsmall flex items-center">
-              <h2 className="inter-base-semibold">
-                {`Choose discount`}
-              </h2>
-            </div>
-          </div>
-          <div className="w-[200px]">
-            <DiscountList control={control}/>
-          </div>
-        </div>
-      </div>
-   </>
-  )
-}
-
-const InputCommission = ({control, register, errors} : 
-  { control: Control<NewAffiliateDiscountFormType, any>, register: UseFormRegister<NewAffiliateDiscountFormType>, errors: any}) => {
-    
-  return (
-    <>
-      <div className="border-grey-20 py-xlarge border-t">
-        <div className="flex items-center justify-between">
-          <div className="gap-y-2xsmall flex flex-col">
-            <div className="gap-x-xsmall flex items-center">
-              <h2 className="inter-base-semibold">
-                {`Define commission (%)`}
-              </h2>
-            </div>
-          </div>
-          <div className="w-[100px]">
-            <Controller
-                name="commission"
-                control={control}
-                render={() =>
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    pattern="^[0-9]+$"
-                    step={1}
-                    placeholder="5"
-                    min={1}
-                    max={100}
-                    maxLength={3}
-                    {...register("commission", {
-                      required: "This field is required",
-                      valueAsNumber: true,
-                      shouldUnregister: true,
-                    })}
-                  />
-                }
-              />
-          </div>
-        </div>
-      </div>
-   </>
-  )
-}
-
-
-
-
-
-type AdminAffiliateDiscountPostReq = {
-  customerId: string,
   discountId: string,
   commission: number,
+  customerEmail: string,
+  discountCode: string
 }
 
-const CreateAffDiscForm = ({ customerId } : { customerId: string }) => {
+// Simple affiliate discount list component
+const AffiliateDiscountList = ({ customerId }: { customerId: string }) => {
+  const [affiliateDiscounts, setAffiliateDiscounts] = useState<AffiliateDiscountResult[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const {
-    state: modalState,
-    open: openModal,
-    close: closeModal
-  } = useToggleState();
-
-  const { mutate } = useAdminCustomPost<
-    AdminAffiliateDiscountPostReq,
-    AffiliateDiscountResult
-  >(
-    `/affiliate-discount`,
-    ["affiliate-discount"]
-   )
-
-  const { control, handleSubmit, register, formState: {errors} } = useForm<NewAffiliateDiscountFormType>({
-    defaultValues: {
-      customerId: customerId
+  // Fetch affiliate discounts for the customer
+  const fetchAffiliateDiscounts = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/admin/affiliate-discount/customer/${customerId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setAffiliateDiscounts(data.affiliateDiscounts || [])
+      } else {
+        toast.error("Failed to load affiliate discounts")
+      }
+    } catch (error) {
+      toast.error("Error loading affiliate discounts")
+    } finally {
+      setLoading(false)
     }
-  })
-
-  const validateCommission = (commission: number) => {
-    return commission >= 1 && commission <= 100;
   }
 
-  const onSubmit = (newDiscount: NewAffiliateDiscountFormType) => {
-    if (!newDiscount.commission || !newDiscount.customerId || !newDiscount.discountId || !validateCommission(newDiscount.commission)) {
-      Toast.error('Affiliate discount', {
-        description: "Values provided in fields are not correct",
-        duration: 5000
-      });
-      return;
+  // Delete affiliate discount
+  const deleteAffiliateDiscount = async (affiliateDiscountId: string) => {
+    try {
+      const response = await fetch(`/admin/affiliate-discount/${affiliateDiscountId}`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        toast.success("Affiliate discount deleted successfully")
+        fetchAffiliateDiscounts() // Refresh the list
+      } else {
+        toast.error("Failed to delete affiliate discount")
+      }
+    } catch (error) {
+      toast.error("Error deleting affiliate discount")
     }
-    return mutate(
-      {
-        customerId: newDiscount.customerId, 
-        discountId: newDiscount.discountId, 
-        commission: newDiscount.commission
-      }, {
-      onSuccess: ( { response } ) => {
-        if (response.status == 201) {
-          Toast.success('Affiliate discount', {
-            description: "Your affiliate discount has been published",
-            duration: 5000
-          });
-          closeModal()
-        }
-
-        if (response.status != 201) {
-          Toast.error('Affiliate discount', {
-            description: "Something went wrong. Please check values in fields.",
-            duration: 5000
-          });
-        }
-      },
-      onError( error ) {
-        const realError = getErrorMessage(error);
-        Toast.error('Affiliate discount', {
-          description: realError,
-          duration: 5000
-        });
-      },
-    })
   }
 
+  useEffect(() => {
+    if (customerId) {
+      fetchAffiliateDiscounts()
+    }
+  }, [customerId])
 
-  const onModalStateChange = React.useCallback(
-    async (open: boolean) => {
-      open ? openModal() : closeModal()
-    }, [
-      modalState
-    ]
-  )
-
-  return (
-    <>
-      {modalState && (
-        <FocusModal>
-        <FocusModal.Trigger asChild>
-          <Button variant="primary">Create New</Button>
-        </FocusModal.Trigger>
-        <FocusModal.Content>
-          <FocusModal.Header className="flex w-full items-center justify-start">
-            <div className="ml-auto flex items-center justify-end gap-x-2">
-                <Button
-                  variant="primary"
-                  onClick={handleSubmit(onSubmit)}
-                  className="rounded-rounded"
-                >
-                  {"Publish affiliate discount"}
-                </Button>
-            </div>
-          </FocusModal.Header>
-          <FocusModal.Body className="flex h-full w-full flex-col items-center overflow-y-auto">
-            <div className="rounded-rounded border-grey-20 pt-large pb-xlarge px-xlarge gap-y-xlarge flex w-full large:max-w-[50%] flex-col bg-white">
-              <div className="flex h-full flex-col">
-                  <div className="border-ui-border-base flex items-center justify-between pb-4 pt-6">
-                    <div className="flex items-center gap-x-3">
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {`New affiliate discount`}
-                      </h2>
-                    </div>
-                </div>
-                <div className="py-xlarge">
-                  <ChooseDiscount control={control}/>
-                </div>
-                <div className="py-xlarge">
-                  <InputCommission control={control} register={register} errors={errors}/>
-                </div>
-              </div>
-            </div>
-          </FocusModal.Body>
-        </FocusModal.Content>
-        </FocusModal>
-      )}
-    </>
-  )
-}
-
-type AdminAffiliateDiscountByCustomerIdQuery = {
-  customerId: string
-}
-
-type AffiliateDiscountResponse = {
-  affiliateDiscounts: AffiliateDiscountResult[]
-}
-
-const CustomAssignDiscountWidget = (props: CustomerDetailsWidgetProps) => {
-  const { data, isLoading } = useAdminCustomQuery<
-    AdminAffiliateDiscountByCustomerIdQuery,
-    AffiliateDiscountResponse
-  >(
-    `/affiliate-discount/customer/${props.customer.id}`,
-    [""]
-  )
-
-  if (isLoading) {
-    return <></>
+  if (loading) {
+    return <div>Loading affiliate discounts...</div>
   }
 
   return (
-    <>
-    <Toaster/>
-    <Container>
-      <div className="flex items-center justify-between px-8 pt-6 pb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Affiliate discounts</h2>
-        <div className="flex items-center gap-x-2">
-          <CreateAffDiscForm customerId={props.customer.id}/>
+    <div className="flex flex-col gap-y-2">
+      {affiliateDiscounts.length === 0 ? (
+        <div className="text-center py-4 text-gray-500">
+          No affiliate discounts found for this customer.
         </div>
-      </div>
-      <AffilateDiscountsTable affiliateDiscounts={data.affiliateDiscounts}/>
-    </Container>
-    </>
-  );
+      ) : (
+        affiliateDiscounts.map((affiliateDiscount) => (
+          <div
+            key={affiliateDiscount.id}
+            className="border rounded-lg p-4 bg-white shadow-sm"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-medium">{affiliateDiscount.discountCode}</h4>
+                <p className="text-sm text-gray-600">
+                  Commission: {affiliateDiscount.commission} {affiliateDiscount.currencyCode}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Usage: {affiliateDiscount.usageCount} | Earnings: {affiliateDiscount.earnings} {affiliateDiscount.currencyCode}
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                size="small"
+                onClick={() => deleteAffiliateDiscount(affiliateDiscount.id)}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )
 }
+
+// Simple form component for creating new affiliate discounts
+const NewAffiliateDiscountForm = ({ customerId, onSuccess }: { customerId: string, onSuccess: () => void }) => {
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<NewAffiliateDiscountFormType>()
+  const [loading, setLoading] = useState(false)
+
+  const onSubmit = async (data: NewAffiliateDiscountFormType) => {
+    setLoading(true)
+    try {
+      const response = await fetch('/admin/affiliate-discount', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          customerId,
+          discountId: data.discountId,
+          commission: data.commission,
+          customerEmail: data.customerEmail,
+          discountCode: data.discountCode
+        })
+      })
+      
+      if (response.ok) {
+        toast.success("Affiliate discount created successfully")
+        reset()
+        onSuccess()
+      } else {
+        toast.error("Failed to create affiliate discount")
+      }
+    } catch (error) {
+      toast.error("Error creating affiliate discount")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-1">Customer Email</label>
+        <Input
+          {...register('customerEmail', { required: 'Customer email is required' })}
+          placeholder="customer@example.com"
+        />
+        {errors.customerEmail && (
+          <p className="text-red-500 text-sm mt-1">{errors.customerEmail.message}</p>
+        )}
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">Discount Code</label>
+        <Input
+          {...register('discountCode', { required: 'Discount code is required' })}
+          placeholder="DISCOUNT10"
+        />
+        {errors.discountCode && (
+          <p className="text-red-500 text-sm mt-1">{errors.discountCode.message}</p>
+        )}
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">Discount ID</label>
+        <Input
+          {...register('discountId', { required: 'Discount ID is required' })}
+          placeholder="disc_123"
+        />
+        {errors.discountId && (
+          <p className="text-red-500 text-sm mt-1">{errors.discountId.message}</p>
+        )}
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">Commission</label>
+        <Input
+          type="number"
+          step="0.01"
+          {...register('commission', { 
+            required: 'Commission is required',
+            valueAsNumber: true,
+            min: { value: 0, message: 'Commission must be positive' }
+          })}
+          placeholder="10.00"
+        />
+        {errors.commission && (
+          <p className="text-red-500 text-sm mt-1">{errors.commission.message}</p>
+        )}
+      </div>
+      
+      <Button type="submit" disabled={loading}>
+        {loading ? 'Creating...' : 'Create Affiliate Discount'}
+      </Button>
+    </form>
+  )
+}
+
+// Main widget component
+const CustomerAffiliateDiscountWidget = ({ customerId }: { customerId: string }) => {
+  const [showForm, setShowForm] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const handleFormSuccess = () => {
+    setShowForm(false)
+    setRefreshKey(prev => prev + 1) // Trigger refresh
+  }
+
+  return (
+    <Container className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Affiliate Discounts</h2>
+        <Button
+          variant="secondary"
+          onClick={() => setShowForm(!showForm)}
+        >
+          {showForm ? 'Cancel' : 'Add New'}
+        </Button>
+      </div>
+      
+      {showForm && (
+        <div className="mb-6 p-4 border rounded-lg bg-gray-50">
+          <h3 className="text-md font-medium mb-4">Create New Affiliate Discount</h3>
+          <NewAffiliateDiscountForm
+            customerId={customerId}
+            onSuccess={handleFormSuccess}
+          />
+        </div>
+      )}
+      
+      <div key={refreshKey}>
+        <AffiliateDiscountList customerId={customerId} />
+      </div>
+    </Container>
+  )
+}
+
+// Main export - simplified widget for Medusa v2
+const CustomerAffiliateDiscount = ({ customer }: { customer: { id: string } }) => {
+  return (
+    <div>
+      <CustomerAffiliateDiscountWidget customerId={customer.id} />
+    </div>
+  )
+}
+
+export default CustomerAffiliateDiscount
 
 export const config: WidgetConfig = {
-  zone: "customer.details.after",
+  zone: "customer.details.before",
 }
-
-export default CustomAssignDiscountWidget;

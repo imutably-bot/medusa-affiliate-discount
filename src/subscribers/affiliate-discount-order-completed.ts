@@ -10,52 +10,28 @@
  * limitations under the License.
  */
 
-import { 
-    type SubscriberConfig, 
-    type SubscriberArgs,
-    OrderService,
-  } from "@medusajs/medusa"
-import AffiliateDiscountService, { AdjustmentItemType } from "../services/affiliateDiscount";
+import { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
+import { AFFILIATE_DISCOUNT_MODULE } from "../modules/affiliate-discount"
+import type { AffiliateDiscountService } from "../modules/affiliate-discount/service"
 
-  export default async function affiliateDiscountOrderHandler({ 
-    data, eventName, container, pluginOptions, 
-  }: SubscriberArgs<Record<string, any>>) {
-    if (pluginOptions['updateWhen'] && pluginOptions['updateWhen'] == 'PAYMENT_CAPTURED') {
-      if (eventName && eventName !== OrderService.Events.PAYMENT_CAPTURED) {
-          return;
-        }
-    } else {
-      if (eventName && eventName !== OrderService.Events.COMPLETED) {
-        return; 
-      }
-    }
-
-    const orderService: OrderService = container.resolve('orderService');
-    const order = await orderService.retrieve(data.id, {
-      select: ["id", "discounts", "items"],
-      relations: ["discounts", "items.adjustments"]
-    });
-
-    const adjustmentItems: AdjustmentItemType[] = order.items.flatMap(item => {
-      let results: AdjustmentItemType[] = [];
-      item.adjustments.forEach(adjustment => {
-        results.push({
-          unitPrice: item.unit_price * item.quantity,
-          discountId: adjustment.discount_id
-        })
-      })
-      return results;
-    });
-  
-    const affiliateDiscountService: AffiliateDiscountService = container.resolve('affiliateDiscountService');
-
-    await affiliateDiscountService.incrementUsageCountAndEarnings(adjustmentItems);
+export default async function affiliateDiscountOrderHandler({ 
+    event, container 
+  }: SubscriberArgs<{ id: string }>) {
+    const affiliateDiscountModuleService = container.resolve(
+      AFFILIATE_DISCOUNT_MODULE
+    ) as AffiliateDiscountService
+    
+    // TODO: Implement order processing logic for v2
+    // This needs to be updated to work with Medusa v2 order events and data structure
+    console.log('Order completed event received:', event.data.id)
+    
+    // Implementation needed for v2 order processing
   }
   
-  export const config: SubscriberConfig = {
+export const config: SubscriberConfig = {
     event: [
-      OrderService.Events.PAYMENT_CAPTURED,
-      OrderService.Events.COMPLETED
+      "order.payment_captured",
+      "order.completed"
     ],
     context: {
       subscriberId: "affiliate-discount-order-handler",

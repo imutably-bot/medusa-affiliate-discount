@@ -13,8 +13,9 @@
 import type { 
     MedusaRequest, 
     MedusaResponse,
-  } from "@medusajs/medusa"
-import AffiliateDiscountService from "../../../../../services/affiliateDiscount";
+  } from "@medusajs/framework/http"
+import { AFFILIATE_DISCOUNT_MODULE } from "../../../../../modules/affiliate-discount";
+import type { AffiliateDiscountService } from "../../../../../modules/affiliate-discount/service";
   
 export const GET = async (
   req: MedusaRequest,
@@ -22,9 +23,11 @@ export const GET = async (
 ) => {
   const discountId = req.params.id;
   if (discountId) {
-    const affiliateDiscountService: AffiliateDiscountService = req.scope.resolve('affiliateDiscountService');
+    const affiliateDiscountModuleService = req.scope.resolve(
+      AFFILIATE_DISCOUNT_MODULE
+    ) as AffiliateDiscountService
     try {
-      const result = await affiliateDiscountService.getAffiliateDiscountsByDiscountId(discountId);
+      const result = await affiliateDiscountModuleService.getByDiscountId(discountId);
       res.status(200).json({
         affiliateDiscounts: result
       });

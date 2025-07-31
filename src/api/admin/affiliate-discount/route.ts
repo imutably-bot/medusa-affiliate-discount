@@ -13,21 +13,36 @@
 import type { 
     MedusaRequest, 
     MedusaResponse,
-  } from "@medusajs/medusa"
-import AffiliateDiscountService from "../../../services/affiliateDiscount";
+} from "@medusajs/framework/http"
+
+import { AFFILIATE_DISCOUNT_MODULE } from "../../../modules/affiliate-discount"
+import type { AffiliateDiscountService } from "../../../modules/affiliate-discount/service";
   
 export const POST = async (
     req: MedusaRequest,
     res: MedusaResponse
 ) => {
-    const customerId = req.body.customerId;
-    const discountId = req.body.discountId;
-    const commission = req.body.commission;
-    if (customerId && discountId && commission) {
-        const affiliateDiscountService: AffiliateDiscountService = req.scope.resolve('affiliateDiscountService');
+    const { customerId, discountId, commission, customerEmail, discountCode } = req.body as {
+      customerId: string
+      discountId: string
+      commission: number
+      customerEmail: string
+      discountCode: string
+    }
+    
+    if (customerId && discountId && commission && customerEmail && discountCode) {
+        const affiliateDiscountModuleService = req.scope.resolve(
+            AFFILIATE_DISCOUNT_MODULE
+        ) as AffiliateDiscountService
         try {
-            const result = await affiliateDiscountService.createAffiliateDiscount(customerId, discountId, commission);
-            res.status(201).json(result); 
+            const result = await affiliateDiscountModuleService.createAffiliateDiscount({
+              customerId,
+              discountId,
+              commission,
+              customerEmail,
+              discountCode
+            })
+            res.status(201).json(result)
         } catch (e) {
             res.status(400).json({
                 message: e.message
@@ -35,7 +50,7 @@ export const POST = async (
         }
     } else {
         res.status(400).json({
-            message: `CustomerId or DiscountId or Commission is not passed`
+            message: "Missing required fields"
         })
     }
 }
