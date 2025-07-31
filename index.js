@@ -1,26 +1,25 @@
+// This file is only used for development purposes
+// In production, the plugin will be loaded by the Medusa application
+
 const express = require("express")
 const { GracefulShutdownServer } = require("medusa-core-utils")
 
-// Import MedusaAppLoader from @medusajs/framework for Medusa v2
-const { MedusaAppLoader } = require("@medusajs/framework")
-
+// For standalone plugin development, we don't need to initialize a full Medusa application
+// This is just a simple Express server to test the plugin
 ;(async() => {
   async function start() {
     const app = express()
-    const directory = process.cwd()
+    const port = process.env.PORT ?? 9000
+
+    app.get("/", (req, res) => {
+      res.json({
+        status: "ok",
+        message: "Medusa Affiliate Discount Plugin is ready to be integrated into a Medusa application",
+        note: "This is a development server only. In production, this plugin should be loaded by a Medusa application."
+      })
+    })
 
     try {
-      // Use MedusaAppLoader from @medusajs/framework for Medusa v2
-      const medusaApp = new MedusaAppLoader({
-        directory,
-        expressApp: app
-      })
-      
-      await medusaApp.load()
-      const container = medusaApp.container
-      
-      const configModule = container.resolve("configModule")
-      const port = process.env.PORT ?? configModule.projectConfig.port ?? 9000
 
       const server = GracefulShutdownServer.create(
         app.listen(port, (err) => {
