@@ -24,13 +24,14 @@
     "prepare": "cross-env NODE_ENV=production npm run build:server"
   },
   "dependencies": {
-    "@medusajs/framework": "2.8.5",
     "@medusajs/admin-sdk": "2.8.5",
-    "@medusajs/ui": "^3.0.0",
+    "@medusajs/framework": "2.8.5",
     "@medusajs/icons": "^1.2.2",
+    "@medusajs/ui": "^3.0.0",
     "@tanstack/react-query": "^4.22",
-    "typeorm": "^0.3.16",
-    "react-hook-form": "^7.49.2"
+    "medusa-core-utils": "^1.2.3",
+    "react-hook-form": "^7.49.2",
+    "typeorm": "^0.3.16"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.3",
