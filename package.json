@@ -8,20 +8,15 @@
     "type": "git",
     "url": "https://github.com/RSC-Labs/medusa-affiliate-discount"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
-    "./workflows": "./.medusa/server/src/workflows/index.js",
-    "./.medusa/server/src/modules/*": "./.medusa/server/src/modules/*/index.js",
-    "./providers/*": "./.medusa/server/src/providers/*/index.js",
-    "./*": "./.medusa/server/src/*.js",
-    "./admin": {
-      "import": "./.medusa/server/src/admin/index.mjs",
-      "require": "./.medusa/server/src/admin/index.js",
-      "default": "./.medusa/server/src/admin/index.js"
-    }
+    "./admin": "./dist/admin/index.js"
   },
   "files": [
-    ".medusa/server"
+    "dist",
+    "README.md"
   ],
   "keywords": [
     "medusa-plugin",
@@ -36,7 +31,7 @@
     "clean": "cross-env ./node_modules/.bin/rimraf dist",
     "build": "cross-env npm run clean && tsc -p tsconfig.json",
     "build:server": "cross-env npm run clean && tsc -p tsconfig.json",
-    "build:admin": "cross-env medusa build",
+    "build:admin": "cross-env tsc -p tsconfig.json",
     "prepare": "cross-env NODE_ENV=production npm run build:server"
   },
   "dependencies": {
@@ -59,6 +54,7 @@
     "cross-env": "^7.0.3",
     "eslint": "^6.8.0",
     "rimraf": "^3.0.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {

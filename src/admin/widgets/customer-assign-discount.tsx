@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-import type { WidgetConfig } from "@medusajs/admin-sdk"
+import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import { Container, Button, Input, toast } from "@medusajs/ui"
 import { useForm } from "react-hook-form"
 import React, { useState, useEffect } from "react"
@@ -269,6 +269,6 @@ const CustomerAffiliateDiscount = ({ customer }: { customer: { id: string } }) =
 
 export default CustomerAffiliateDiscount
 
-export const config: WidgetConfig = {
+export const config = defineWidgetConfig({
   zone: "customer.details.before",
-}
+})
