@@ -20,6 +20,9 @@
       "default": "./.medusa/server/src/admin/index.js"
     }
   },
+  "files": [
+    ".medusa/server"
+  ],
   "keywords": [
     "medusa-plugin",
     "medusa-plugin-other",
