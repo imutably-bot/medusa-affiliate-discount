@@ -8,9 +8,22 @@
     "type": "git",
     "url": "https://github.com/RSC-Labs/medusa-affiliate-discount"
   },
+  "exports": {
+    "./package.json": "./package.json",
+    "./workflows": "./.medusa/server/src/workflows/index.js",
+    "./.medusa/server/src/modules/*": "./.medusa/server/src/modules/*/index.js",
+    "./providers/*": "./.medusa/server/src/providers/*/index.js",
+    "./*": "./.medusa/server/src/*.js",
+    "./admin": {
+      "import": "./.medusa/server/src/admin/index.mjs",
+      "require": "./.medusa/server/src/admin/index.js",
+      "default": "./.medusa/server/src/admin/index.js"
+    }
+  },
   "keywords": [
     "medusa-plugin",
     "medusa-plugin-other",
+    "medusa-v2",
     "admin",
     "affiliate marketing",
     "affiliate discount",
@@ -27,7 +40,7 @@
     "@medusajs/admin-sdk": "2.8.5",
     "@medusajs/framework": "2.8.5",
     "@medusajs/icons": "^1.2.2",
-    "@medusajs/ui": "^3.0.0",
+    "@medusajs/ui": "^4.0.6",
     "@tanstack/react-query": "^4.22",
     "medusa-core-utils": "^1.2.3",
     "react-hook-form": "^7.49.2",
