@@ -15,13 +15,15 @@ import CustomerAffiliateDiscount from "./widgets/customer-assign-discount"
 
 // Export all widgets as a default export for Medusa v2 admin UI
 export default {
-  widgets: {
-    // Register the widget for the customer details page
-    customer: {
-      details: {
-        "customer-affiliate-discount": CustomerAffiliateDiscount,
+  widgetModule: {
+    widgets: {
+      // Register the widget for the customer details page
+      customer: {
+        details: {
+          "customer-affiliate-discount": CustomerAffiliateDiscount,
+        },
       },
     },
-  },
+  }
 }
 
