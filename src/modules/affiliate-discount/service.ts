@@ -1,44 +1,63 @@
 import { MedusaService } from "@medusajs/framework/utils"
 import { AffiliateDiscount } from "./models/affiliate-discount"
 
+type AffiliateDiscountData = {
+  id?: string
+  customerId: string
+  customerEmail: string
+  discountId: string
+  discountCode: string
+  commission: number
+  usageCount?: number
+  earnings?: number
+  currencyCode?: string
+}
+
 class AffiliateDiscountModuleService extends MedusaService({
   AffiliateDiscount,
 }) {
+  // Repository methods that will be available through MedusaService
+  protected affiliateDiscountRepository_: any
+
   async getByCustomerId(customerId: string) {
-    return await this.listAffiliateDiscounts({
-      customerId,
+    return await this.affiliateDiscountRepository_.find({
+      where: { customerId },
     })
   }
 
   async getByDiscountId(discountId: string) {
-    return await this.listAffiliateDiscounts({
-      discountId,
+    return await this.affiliateDiscountRepository_.find({
+      where: { discountId },
     })
   }
 
   async incrementUsageCount(affiliateDiscountId: string) {
-    const affiliateDiscount = await this.retrieveAffiliateDiscount(affiliateDiscountId)
+    const affiliateDiscount = await this.affiliateDiscountRepository_.findOne({
+      where: { id: affiliateDiscountId },
+    })
     
-    return await this.updateAffiliateDiscounts([{
-      id: affiliateDiscountId,
-      usageCount: affiliateDiscount.usageCount + 1,
-      earnings: affiliateDiscount.earnings + affiliateDiscount.commission,
-    }])
+    if (!affiliateDiscount) {
+      throw new Error(`Affiliate discount with id ${affiliateDiscountId} not found`)
+    }
+
+    affiliateDiscount.usageCount = (affiliateDiscount.usageCount || 0) + 1
+    affiliateDiscount.earnings = (affiliateDiscount.earnings || 0) + affiliateDiscount.commission
+    
+    return await this.affiliateDiscountRepository_.save(affiliateDiscount)
   }
 
-  async createAffiliateDiscount(data: {
-    customerId: string
-    customerEmail: string
-    discountId: string
-    discountCode: string
-    commission: number
-    currencyCode?: string
-  }) {
-    return await this.createAffiliateDiscounts([data])
+  async createAffiliateDiscount(data: AffiliateDiscountData) {
+    const newAffiliateDiscount = this.affiliateDiscountRepository_.create({
+      ...data,
+      usageCount: 0,
+      earnings: 0,
+    })
+    
+    return await this.affiliateDiscountRepository_.save(newAffiliateDiscount)
   }
 
   async deleteAffiliateDiscount(affiliateDiscountId: string) {
-    return await this.softDeleteAffiliateDiscounts([affiliateDiscountId])
+    return await this.affiliateDiscountRepository_.softDelete(affiliateDiscountId)
   }
 }
 

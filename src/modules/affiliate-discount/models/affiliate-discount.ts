@@ -10,7 +10,4 @@ export const AffiliateDiscount = model.define("affiliate_discount", {
   usageCount: model.number().default(0),
   earnings: model.float().default(0),
   currencyCode: model.text().default("usd"),
-  created_at: model.dateTime(),
-  updated_at: model.dateTime(),
-  deleted_at: model.dateTime().nullable(),
 })
